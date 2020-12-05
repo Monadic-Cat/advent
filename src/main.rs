@@ -50,25 +50,43 @@ mod day_01 {
 
         Data { entries }
     }
-    // Infallible for the same reason as above.
-    fn find_pair(data: &Data) -> (usize, usize) {
+    macro_rules! some_or_continue {
+        ($e:expr) => {
+            match $e {
+                Some(x) => x,
+                None => continue,
+            }
+        }
+    }
+    fn find_pair(total: u64, data: &Data) -> Option<(usize, usize)> {
         for (idx, x) in data.entries.iter().enumerate() {
-            match data.entries.binary_search(&(2020 - x)) {
-                Ok(sdx) => return (idx, sdx),
+            match data.entries.binary_search(&some_or_continue!(total.checked_sub(*x))) {
+                Ok(sdx) => return Some((idx, sdx)),
                 Err(_) => (),
             }
         }
-        unreachable!("there should always be at least one match")
+        None
+    }
+    fn find_triple(total: u64, data: &Data) -> Option<(usize, usize, usize)> {
+        for (idx, x) in data.entries.iter().enumerate() {
+            match find_pair(some_or_continue!(total.checked_sub(*x)), data) {
+                Some((b, c)) => return Some((idx, b, c)),
+                None => ()
+            };
+        }
+        None
     }
     // Infallible for the same reason as above.
-    pub fn solve(input: &[u8]) -> u64 {
+    pub fn solve(input: &[u8]) -> (u64, u64) {
         let data = parse_input(input);
-        let (a, b) = find_pair(&data);
-        let solution = data.entries[a] * data.entries[b];
-        solution
+        let (a, b) = find_pair(2020, &data).expect("this is one of the required solutions");
+        let part_one_solution = data.entries[a] * data.entries[b];
+        let (a, b, c) = find_triple(2020, &data).expect("this is one of the required solutions");
+        let part_two_solution = data.entries[a] * data.entries[b] * data.entries[c];
+        (part_one_solution, part_two_solution)
     }
 }
 
 fn main() {
-    println!("Day 1: {}", day_01::solve(&input::fetch(1).unwrap()));
+    println!("Day 1: {:?}", day_01::solve(&input::fetch(1).unwrap()));
 }
