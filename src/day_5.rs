@@ -9,40 +9,44 @@ struct BoardingPass {
 }
 fn parse_pass(pass: &[u8]) -> BoardingPass {
     let row = &pass[..7];
-    let row = row.iter().enumerate().fold(0u8, |a, (idx, x)| {
-        match x {
-            b'B' => a | ROW_MAX >> idx,
-            b'F' => a,
-            _ => unreachable!()
-        }
+    let row = row.iter().enumerate().fold(0u8, |a, (idx, x)| match x {
+        b'B' => a | ROW_MAX >> idx,
+        b'F' => a,
+        _ => unreachable!(),
     });
     let column = &pass[7..];
-    let column = column.iter().enumerate().fold(0u8, |a, (idx, x)| {
-        match x {
-            b'R' => a | COLUMN_MAX >> idx,
-            b'L' => a,
-            _ => unreachable!()
-        }
+    let column = column.iter().enumerate().fold(0u8, |a, (idx, x)| match x {
+        b'R' => a | COLUMN_MAX >> idx,
+        b'L' => a,
+        _ => unreachable!(),
     });
     BoardingPass {
         seat_id: (row as u16) * 8 + (column as u16),
-        row, column,
+        row,
+        column,
     }
 }
 fn parse_input(input: &[u8]) -> Vec<BoardingPass> {
-    ::core::str::from_utf8(input).unwrap().lines().map(|x| parse_pass(x.as_bytes())).collect()
+    ::core::str::from_utf8(input)
+        .unwrap()
+        .lines()
+        .map(|x| parse_pass(x.as_bytes()))
+        .collect()
 }
 
 /// Find unused seat ID. Also sorts the list of passes.
 fn find_empty(passes: &mut [BoardingPass]) -> u16 {
     passes.sort_unstable_by_key(|x| x.seat_id);
-    let empty_seat = passes.windows(2).filter_map(|x| {
-        match x {
-            [BoardingPass { seat_id: a, .. }, BoardingPass { seat_id: b, .. }] if b - a != 1 => Some(b - 1),
+    let empty_seat = passes
+        .windows(2)
+        .filter_map(|x| match x {
+            [BoardingPass { seat_id: a, .. }, BoardingPass { seat_id: b, .. }] if b - a != 1 => {
+                Some(b - 1)
+            }
             [_, _] => None,
-            _ => unreachable!()
-        }
-    }).collect::<Vec<_>>()[0];
+            _ => unreachable!(),
+        })
+        .collect::<Vec<_>>()[0];
     empty_seat
 }
 
