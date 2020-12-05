@@ -1,4 +1,4 @@
-use ::core::mem::take;
+use ::core::mem;
 
 #[derive(Default, Debug)]
 struct Passport<'a> {
@@ -27,6 +27,33 @@ impl<'a> Passport<'a> {
         ) {
             (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), _) => true,
             _ => false,
+        }
+    }
+    fn is_valid_part_two(&self) -> bool {
+        // The validity requirements from part 1 still hold,
+        // but there are some additional requirements.
+        // So, let's check part 1's, then do part 2's.
+        if !self.is_valid() {
+            false
+        } else {
+            parse_radix(self.birth_year.unwrap(), 10).and_then(|x| {
+                match x {
+                    x if (1920 ..= 2002).contains(&x) => Ok(x),
+                    _ => Err(()),
+                }
+            }).is_ok() &&
+                parse_radix(self.issue_year.unwrap(), 10).and_then(|x| match x {
+                    x if (2010 ..= 2020).contains(&x) => Ok(x),
+                    _ => Err(())
+                }).is_ok() &&
+                parse_radix(self.expiration_year.unwrap(), 10).and_then(|x| match x {
+                    x if (2020 ..= 2030).contains(&x) => Ok(x),
+                    _ => Err(()),
+                }).is_ok() &&
+                height_is_valid(self.height.unwrap()) &&
+                hair_color_is_valid(self.hair_color.unwrap()) &&
+                eye_color_is_valid(self.eye_color.unwrap()) &&
+                passport_id_is_valid(self.passport_id.unwrap())
         }
     }
     /// Merge a field value into this passport.
@@ -78,6 +105,8 @@ fn parse_kv_pair(input: &[u8]) -> (&[u8], Option<Field<'_>>) {
     let (rest, key) = take_until(input, |x| x == b':');
     let rest = &rest[1..]; // Throw away the b':' between the key and value.
     let (mut rest, value) = take_until(rest, |x| x == b' ' || x == b'\n');
+    // Throw away terminating whitespace, if present.
+    // This is in question because we *will* hit EOF.
     match rest {
         [x, ..] if (*x == b' ') || (*x == b'\n') => rest = &rest[1..],
         _ => (),
@@ -97,6 +126,52 @@ fn parse_kv_pair(input: &[u8]) -> (&[u8], Option<Field<'_>>) {
     (rest, Some(field))
 }
 
+fn parse_radix(x: &[u8], radix: u32) -> Result<u64, ()> {
+    let text = ::core::str::from_utf8(x).unwrap();
+    u64::from_str_radix(text, radix).map_err(|_| ())
+}
+
+fn height_is_valid(height: &[u8]) -> bool {
+    match height {
+        [amt @ .., b'c', b'm'] | [amt @ .., b'i', b'n'] => {
+            parse_radix(amt, 10).and_then(|x| match height[height.len() - 2..] {
+                [b'c', b'm'] if (150 ..= 193).contains(&x) => Ok(x),
+                [b'i', b'n'] if (59 ..= 76).contains(&x) => Ok(x),
+                _ => Err(()),
+            }).is_ok()
+        }
+        _ => false,
+    }
+}
+
+fn hair_color_is_valid(color: &[u8]) -> bool {
+    match color {
+        [b'#', rest @ ..] => {
+            for (idx, b) in rest.iter().enumerate() {
+                if !((b'0' ..= b'9').contains(b) || (b'a' ..= b'f').contains(b)) {
+                    return false
+                }
+                if idx > 5 {
+                    return false
+                }
+            }
+            true
+        }
+        _ => false,
+    }
+}
+
+fn eye_color_is_valid(color: &[u8]) -> bool {
+    match color {
+        b"amb" | b"blu" | b"brn" | b"gry" | b"grn" | b"hzl" | b"oth" => true,
+        _ => false,
+    }
+}
+
+fn passport_id_is_valid(id: &[u8]) -> bool {
+    id.len() == 9 && parse_radix(id, 10).is_ok()
+}
+
 fn parse_input(mut input: &[u8]) -> Vec<Passport> {
     let mut passports = Vec::new();
     let mut current_passport = Passport::default();
@@ -105,14 +180,15 @@ fn parse_input(mut input: &[u8]) -> Vec<Passport> {
         if let Some(field) = field {
             current_passport.merge_field(field);
         } else {
-            passports.push(take(&mut current_passport));
+            passports.push(mem::take(&mut current_passport));
         }
         input = rest;
     }
 
     passports
 }
-pub fn solve(input: &[u8]) -> usize {
+pub fn solve(input: &[u8]) -> (usize, usize) {
     let passports = parse_input(input);
-    passports.iter().filter(|x| x.is_valid()).count()
+    (passports.iter().filter(|x| x.is_valid()).count(),
+     passports.iter().filter(|x| x.is_valid_part_two()).count())
 }
