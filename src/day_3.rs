@@ -35,7 +35,7 @@ fn parse_input(input: &[u8]) -> Map {
 }
 
 /// Count the number of trees we encounter
-fn sled(start: Point, slope: Slope, map: Map) -> u64 {
+fn sled(start: Point, slope: Slope, map: &Map) -> u64 {
     let mut current = start;
     let mut tree_count = 0;
     while current.y < map.rows.len() {
@@ -49,7 +49,27 @@ fn sled(start: Point, slope: Slope, map: Map) -> u64 {
     tree_count
 }
 
-pub fn solve(input: &[u8]) -> u64 {
+macro_rules! sled_many {
+    (point: ($px:expr , $py:expr), map: $map:expr => { $(($right:expr , $down:expr)),+ $(,)? }) => {
+        vec![$(
+            sled(Point { x: $px, y: $py },
+                 Slope { right: $right, down: $down },
+                 $map)
+        ),+]
+    }
+}
+
+pub fn solve(input: &[u8]) -> (u64, u64) {
     let map = parse_input(input);
-    sled(Point { x: 0, y: 0 }, Slope { right: 3, down: 1 }, map)
+    let part_one = sled(Point { x: 0, y: 0 }, Slope { right: 3, down: 1 }, &map);
+    let part_two = sled_many! { point: (0, 0),
+                                map: &map => {
+                                    (1, 1),
+                                    (3, 1),
+                                    (5, 1),
+                                    (7, 1),
+                                    (1, 2),
+                                }
+    }.iter().product();
+    (part_one, part_two)
 }
