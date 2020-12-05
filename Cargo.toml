@@ -1,0 +1,16 @@
+[package]
+name = "advent"
+version = "0.1.0"
+authors = ["Monadic Cat <greenmonadcat@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nom = "6.0.1"
+reqwest = { version = "0.10.9", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "0.3.5", features = ["full"] }
+tokio-compat-02 = "0.1.2"
+anyhow = "1.0.34"
+# Compatible with reqwest, which uses bytes 0.5
+bytes = "0.5.6"
