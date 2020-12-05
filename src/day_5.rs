@@ -33,7 +33,22 @@ fn parse_input(input: &[u8]) -> Vec<BoardingPass> {
     ::core::str::from_utf8(input).unwrap().lines().map(|x| parse_pass(x.as_bytes())).collect()
 }
 
-pub fn solve(input: &[u8]) -> u16 {
-    let passes = parse_input(input);
-    passes.iter().map(|x| x.seat_id).max().unwrap()
+/// Find unused seat ID. Also sorts the list of passes.
+fn find_empty(passes: &mut [BoardingPass]) -> u16 {
+    passes.sort_unstable_by_key(|x| x.seat_id);
+    let empty_seat = passes.windows(2).filter_map(|x| {
+        match x {
+            [BoardingPass { seat_id: a, .. }, BoardingPass { seat_id: b, .. }] if b - a != 1 => Some(b - 1),
+            [_, _] => None,
+            _ => unreachable!()
+        }
+    }).collect::<Vec<_>>()[0];
+    empty_seat
+}
+
+pub fn solve(input: &[u8]) -> (u16, u16) {
+    let mut passes = parse_input(input);
+    let part_one = passes.iter().map(|x| x.seat_id).max().unwrap();
+    let part_two = find_empty(&mut passes);
+    (part_one, part_two)
 }
