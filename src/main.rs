@@ -115,9 +115,20 @@ mod day_2 {
 
         entries
     }
-    pub fn solve(input: &[u8]) -> u64 {
+    pub fn solve(input: &[u8]) -> (u64, u64) {
+        use ::core::convert::TryFrom;
         let entries = parse_input(input);
-        entries.iter().filter(|e| e.is_valid()).count() as u64
+        let part_one = entries.iter().filter(|e| e.is_valid()).count() as u64;
+        let part_two = entries.iter().filter(|e| {
+            let (fdx, sdx) = (e.policy.1.start(), e.policy.1.end());
+            // The given positions are 1-indexed.
+            let (fdx, sdx) = (fdx - 1, sdx - 1);
+            let letter = e.policy.0;
+            let word = e.password;
+            (word[usize::try_from(fdx).unwrap()] == letter) ^
+                (word[usize::try_from(sdx).unwrap()] == letter)
+        }).count() as u64;
+        (part_one, part_two)
     }
 }
 
