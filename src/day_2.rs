@@ -101,7 +101,6 @@ fn parse_input(input: &[u8]) -> Vec<Entry<'_>> {
     entries
 }
 pub fn solve(input: &[u8]) -> (u64, u64) {
-    use ::core::convert::TryFrom;
     let entries = parse_input(input);
     let part_one = entries.iter().filter(|e| e.is_valid()).count() as u64;
     let part_two = entries.iter().filter(|e| {
