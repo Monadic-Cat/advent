@@ -23,14 +23,8 @@ windows xs = case xs of
   x :: y :: z :: rest => (x :: y :: z :: Nil) :: windows (y :: z :: rest)
   _ => Nil
 
-countWindowedIncreases : List Int -> Int
-countWindowedIncreases xs = snd $ foldl fun (Nothing, 0) (windows xs) where
-  fun : (Maybe $ Vect 3 Int, Int) -> Vect 3 Int -> (Maybe $ Vect 3 Int, Int)
-  fun (Just ol, count) nl = (Just nl, if (sum nl) > (sum ol) then count + 1 else count)
-  fun (Nothing, count) nl = (Just nl, count)
-
 export
 partial solve : String -> String
-solve str = show (countIncreases $ input, countWindowedIncreases input)
+solve str = show (countIncreases $ input, countIncreases $ map sum $ windows input)
   where input : List Int
         input = parseInput str
