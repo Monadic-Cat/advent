@@ -25,6 +25,6 @@ windows xs = case xs of
 
 export
 partial solve : String -> String
-solve str = show (countIncreases $ input, countIncreases $ map sum $ windows input)
+solve str = show (countIncreases input, countIncreases $ map sum $ windows input)
   where input : List Int
         input = parseInput str
