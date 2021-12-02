@@ -37,3 +37,8 @@ windows x lst = takeWindows x Nil lst where
     Just v => takeWindows x (vecs ++ [reverse v]) rest
     Nothing => vecs
   takeWindows x vecs Nil = vecs
+
+
+export
+partial unwrap : Maybe a -> a
+unwrap (Just x) = x
